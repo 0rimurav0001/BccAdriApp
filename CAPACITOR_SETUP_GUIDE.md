@@ -8,6 +8,7 @@ This guide will help you convert the web application into a hybrid mobile app us
 - Android Studio (for Android builds)
 - Xcode (for iOS builds, macOS only)
 - A standard Vite + React project (not Figma Make environment)
+- 
 
 ## Step 1: Setup Standard Vite Project
 

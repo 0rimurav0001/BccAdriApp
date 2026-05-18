@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "829962681954",
+    "project_id": "section-a-25a80",
+    "storage_bucket": "section-a-25a80.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:829962681954:android:75e2897d43606b64d59b3b",
+        "android_client_info": {
+          "package_name": "com.bcc.adri"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAyYAK_5xUBLmACOJy9g40j_DVSIKPqUIw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

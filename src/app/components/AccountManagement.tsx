@@ -19,6 +19,7 @@ export function AccountManagement() {
     email: '',
     fullName: '',
     role: 'student' as 'student' | 'staff' | 'admin',
+    password: '',
     studentId: '',
     course: '',
     yearLevel: ''
@@ -26,19 +27,6 @@ export function AccountManagement() {
   const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
   const [selectedRegistration, setSelectedRegistration] = useState<string | null>(null);
   const [rejectionNotes, setRejectionNotes] = useState('');
-
-  if (user?.role !== 'admin' && user?.role !== 'staff') {
-    return (
-      <div className="p-6 max-w-7xl mx-auto">
-        <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-center">
-          <h3 className="text-lg font-semibold text-red-900 mb-2">Access Denied</h3>
-          <p className="text-sm text-red-700">
-            Account management is only accessible to admin and staff accounts.
-          </p>
-        </div>
-      </div>
-    );
-  }
 
   const filteredUsers = users.filter(u => {
     const matchesSearch = u.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -482,6 +470,16 @@ export function AccountManagement() {
                   <option value="staff">Staff</option>
                   <option value="admin">Admin</option>
                 </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                <input
+                  type="password"
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  placeholder="Enter initial password"
+                />
               </div>
               {formData.role === 'student' && (
                 <>

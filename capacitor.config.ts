@@ -1,7 +1,7 @@
 import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.bcc.academicportal',
+  appId: 'com.bcc.adri',
   appName: 'BCC Portal',
   webDir: 'dist',
   server: {
@@ -9,9 +9,13 @@ const config: CapacitorConfig = {
   },
   plugins: {
     SplashScreen: {
-      launchShowDuration: 2000,
-      backgroundColor: "#22C55E",
-      showSpinner: false
+      launchShowDuration: 0,
+      launchAutoHide: true,
+      backgroundColor: "#ffffffff",
+      androidScaleType: "CENTER_CROP",
+      showSpinner: false,
+      splashFullScreen: true,
+      splashImmersive: true
     }
   }
 };

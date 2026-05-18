@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">BCC Portal</string>
+    <string name="title_activity_main">BCC Portal</string>
+    <string name="package_name">com.bcc.academicportal</string>
+    <string name="custom_url_scheme">com.bcc.academicportal</string>
+</resources>

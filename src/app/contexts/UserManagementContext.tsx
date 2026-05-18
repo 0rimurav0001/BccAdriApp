@@ -1,5 +1,18 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { UserRole } from './AuthContext';
+import {
+  collection,
+  onSnapshot,
+  doc,
+  updateDoc,
+  addDoc,
+  setDoc,
+  serverTimestamp,
+  query
+} from 'firebase/firestore';
+import { initializeApp, deleteApp } from 'firebase/app';
+import { createUserWithEmailAndPassword, getAuth, signOut } from 'firebase/auth';
+import { db, auth as primaryAuth, firebaseConfig } from '../firebase';
 
 export interface UserAccount {
   uid: string;
@@ -11,105 +24,97 @@ export interface UserAccount {
   yearLevel?: string;
   status: 'active' | 'suspended';
   lastLogin?: string;
+  createdAt?: any;
 }
 
 interface UserManagementContextType {
   users: UserAccount[];
-  addUser: (user: Omit<UserAccount, 'uid' | 'status'>) => void;
-  updateUser: (uid: string, updates: Partial<UserAccount>) => void;
-  resetPassword: (uid: string, newPassword: string) => void;
-  suspendUser: (uid: string) => void;
-  activateUser: (uid: string) => void;
+  addUser: (user: Omit<UserAccount, 'uid' | 'status'> & { password?: string }) => Promise<void>;
+  updateUser: (uid: string, updates: Partial<UserAccount>) => Promise<void>;
+  resetPassword: (uid: string, newPassword: string) => Promise<void>;
+  suspendUser: (uid: string) => Promise<void>;
+  activateUser: (uid: string) => Promise<void>;
 }
 
 const UserManagementContext = createContext<UserManagementContextType | undefined>(undefined);
 
-const INITIAL_USERS: UserAccount[] = [
-  {
-    uid: 'student-001',
-    email: 'student@school.edu',
-    fullName: 'John Doe',
-    role: 'student',
-    studentId: '2024-001234',
-    course: 'Computer Science',
-    yearLevel: '3rd Year',
-    status: 'active',
-    lastLogin: '2026-05-18T08:30:00Z'
-  },
-  {
-    uid: 'student-002',
-    email: 'alice.johnson@school.edu',
-    fullName: 'Alice Johnson',
-    role: 'student',
-    studentId: '2024-005678',
-    course: 'Information Technology',
-    yearLevel: '2nd Year',
-    status: 'active',
-    lastLogin: '2026-05-17T14:20:00Z'
-  },
-  {
-    uid: 'student-003',
-    email: 'bob.smith@school.edu',
-    fullName: 'Bob Smith',
-    role: 'student',
-    studentId: '2024-009012',
-    course: 'Business Administration',
-    yearLevel: '4th Year',
-    status: 'active',
-    lastLogin: '2026-05-16T10:15:00Z'
-  },
-  {
-    uid: 'staff-001',
-    email: 'staff@school.edu',
-    fullName: 'Jane Smith',
-    role: 'staff',
-    status: 'active',
-    lastLogin: '2026-05-18T09:00:00Z'
-  },
-  {
-    uid: 'admin-001',
-    email: 'admin@school.edu',
-    fullName: 'Admin User',
-    role: 'admin',
-    status: 'active',
-    lastLogin: '2026-05-18T07:45:00Z'
-  }
-];
-
 export function UserManagementProvider({ children }: { children: ReactNode }) {
-  const [users, setUsers] = useState<UserAccount[]>(INITIAL_USERS);
+  const [users, setUsers] = useState<UserAccount[]>([]);
 
-  const addUser = (userData: Omit<UserAccount, 'uid' | 'status'>) => {
-    const newUser: UserAccount = {
-      ...userData,
-      uid: `user-${Date.now()}`,
-      status: 'active'
-    };
-    setUsers([...users, newUser]);
+  useEffect(() => {
+    const q = query(collection(db, 'users'));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const usersData: UserAccount[] = [];
+      snapshot.forEach((doc) => {
+        usersData.push({ uid: doc.id, ...doc.data() } as UserAccount);
+      });
+      setUsers(usersData);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  const addUser = async (userData: Omit<UserAccount, 'uid' | 'status'> & { password?: string }) => {
+    const { password, ...firestoreData } = userData;
+
+    try {
+      if (password) {
+        // Use a secondary Firebase app to create the user without signing out the current admin
+        const secondaryApp = initializeApp(firebaseConfig, "Secondary");
+        const secondaryAuth = getAuth(secondaryApp);
+
+        try {
+          const userCredential = await createUserWithEmailAndPassword(secondaryAuth, userData.email, password);
+
+          // Save profile to Firestore using the main db instance
+          await setDoc(doc(db, 'users', userCredential.user.uid), {
+            ...firestoreData,
+            status: 'active',
+            createdAt: serverTimestamp()
+          });
+
+          // Clean up secondary app
+          await signOut(secondaryAuth);
+          await deleteApp(secondaryApp);
+
+          alert(`Success! User ${userData.fullName} created.`);
+        } catch (err) {
+          await deleteApp(secondaryApp);
+          throw err;
+        }
+      } else {
+        await addDoc(collection(db, 'users'), {
+          ...firestoreData,
+          status: 'active',
+          createdAt: serverTimestamp()
+        });
+      }
+    } catch (error: any) {
+      console.error("Error adding user:", error);
+      throw error;
+    }
   };
 
-  const updateUser = (uid: string, updates: Partial<UserAccount>) => {
-    setUsers(users.map(user =>
-      user.uid === uid ? { ...user, ...updates } : user
-    ));
+  const updateUser = async (uid: string, updates: Partial<UserAccount>) => {
+    try {
+      const userRef = doc(db, 'users', uid);
+      await updateDoc(userRef, updates);
+    } catch (error) {
+      console.error("Error updating user:", error);
+      throw error;
+    }
   };
 
-  const resetPassword = (uid: string, newPassword: string) => {
-    console.log(`Password reset for user ${uid} to: ${newPassword}`);
-    // In a real app, this would call Firebase Authentication API
-    // For demo purposes, we just log it
+  const resetPassword = async (uid: string, newPassword: string) => {
+    alert("Password reset requires Firebase Admin SDK or Console management in this version.");
   };
 
-  const suspendUser = (uid: string) => {
-    setUsers(users.map(user =>
-      user.uid === uid ? { ...user, status: 'suspended' as const } : user
-    ));
+  const suspendUser = async (uid: string) => {
+    await updateUser(uid, { status: 'suspended' });
   };
 
-  const activateUser = (uid: string) => {
-    setUsers(users.map(user =>
-      user.uid === uid ? { ...user, status: 'active' as const } : user
-    ));
+  const activateUser = async (uid: string) => {
+    await updateUser(uid, { status: 'active' });
   };
 
   return (
