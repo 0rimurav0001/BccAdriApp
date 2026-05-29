@@ -105,11 +105,12 @@ export function AccountManagement() {
   const handleApproveRegistration = (regId: string) => {
     const registration = pendingRegistrations.find(r => r.id === regId);
     if (registration && user) {
-      // Create the user account
+      // Create the user account with the password they provided during registration
       addUser({
         email: registration.email,
         fullName: registration.fullName,
         role: 'student',
+        password: registration.password,
         studentId: registration.studentId,
         course: registration.course,
         yearLevel: registration.yearLevel

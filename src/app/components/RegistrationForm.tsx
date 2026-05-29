@@ -19,7 +19,9 @@ export function RegistrationForm({ onClose }: RegistrationFormProps) {
     yearLevel: '',
     phoneNumber: '',
     dateOfBirth: '',
-    address: ''
+    address: '',
+    password: '',
+    confirmPassword: ''
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -28,18 +30,31 @@ export function RegistrationForm({ onClose }: RegistrationFormProps) {
     // Validate all fields are filled
     const allFieldsFilled = Object.values(formData).every(value => value.trim() !== '');
 
-    if (allFieldsFilled) {
-      setIsSubmitting(true);
-      try {
-        await submitRegistration(formData);
-        setSubmitted(true);
-      } catch (error) {
-        alert('Failed to submit registration. Please try again.');
-      } finally {
-        setIsSubmitting(false);
-      }
-    } else {
+    if (!allFieldsFilled) {
       alert('Please fill in all required fields');
+      return;
+    }
+
+    if (formData.password.length < 6) {
+      alert('Password must be at least 6 characters long');
+      return;
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+      alert('Passwords do not match');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const { confirmPassword, ...submissionData } = formData;
+      await submitRegistration(submissionData);
+      setSubmitted(true);
+    } catch (error) {
+      console.error('Registration error:', error);
+      alert('Failed to submit registration. Please try again.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -137,7 +152,7 @@ export function RegistrationForm({ onClose }: RegistrationFormProps) {
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                placeholder="student@school.edu"
+                placeholder="student@gmail.com"
                 required
               />
             </div>
@@ -217,6 +232,35 @@ export function RegistrationForm({ onClose }: RegistrationFormProps) {
                 className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none"
                 placeholder="Barangay, City/Municipality, Province"
                 rows={2}
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Create Password <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="password"
+                value={formData.password}
+                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                placeholder="••••••••"
+                required
+                minLength={6}
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Confirm Password <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="password"
+                value={formData.confirmPassword}
+                onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                placeholder="••••••••"
                 required
               />
             </div>

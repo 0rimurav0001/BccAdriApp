@@ -21,6 +21,7 @@ export interface PendingRegistration {
   phoneNumber: string;
   dateOfBirth: string;
   address: string;
+  password?: string;
   status: 'pending' | 'approved' | 'rejected';
   dateSubmitted: any;
   reviewedBy?: string;
