@@ -1,7 +1,7 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import { useData } from '../contexts/DataContext';
 import { useAuth } from '../contexts/AuthContext';
-import { FileText, Clock, CheckCircle, TrendingUp, X } from 'lucide-react';
+import { FileText, Clock, CheckCircle, TrendingUp, X, Upload, Loader2 } from 'lucide-react';
 
 const STATUS_STYLES: Record<string, string> = {
   'Pending': 'bg-orange-100 text-orange-700',
@@ -14,12 +14,14 @@ const STATUS_STYLES: Record<string, string> = {
 const CHART_COLORS = ['#22C55E', '#10B981', '#F59E0B', '#3B82F6', '#8B5CF6'];
 
 export function AdminDashboard() {
-  const { requests, updateRequestStatus } = useData();
+  const { requests, updateRequestStatus, uploadProcessedDocument } = useData();
   const { user } = useAuth();
   const [selectedRequest, setSelectedRequest] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [newStatus, setNewStatus] = useState('');
   const [notes, setNotes] = useState('');
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   if (user?.role !== 'admin' && user?.role !== 'staff') {
     return (
@@ -34,12 +36,20 @@ export function AdminDashboard() {
     );
   }
 
-  const { pieData, barData } = useMemo(() => {
-    const statusCounts = requests.reduce((acc, req) => {
+  const { statusCounts, totalRevenue } = useMemo(() => {
+    const counts = requests.reduce((acc, req) => {
       acc[req.status] = (acc[req.status] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);
 
+    const revenue = requests
+      .filter(r => r.status !== 'Rejected')
+      .reduce((sum, r) => sum + r.fee, 0);
+
+    return { statusCounts: counts, totalRevenue: revenue };
+  }, [requests]);
+
+  const { pieData, barData } = useMemo(() => {
     const pieData = Object.entries(statusCounts).map(([name, value]) => ({
       name,
       value,
@@ -58,28 +68,31 @@ export function AdminDashboard() {
     }));
 
     return { pieData, barData };
-  }, [requests]);
+  }, [statusCounts, requests]);
 
-  const { statusCounts, totalRevenue } = useMemo(() => {
-    const statusCounts = requests.reduce((acc, req) => {
-      acc[req.status] = (acc[req.status] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
-
-    const totalRevenue = requests
-      .filter(r => r.status !== 'Rejected')
-      .reduce((sum, r) => sum + r.fee, 0);
-
-    return { statusCounts, totalRevenue };
-  }, [requests]);
-
-  const handleUpdateStatus = () => {
+  const handleUpdateStatus = async () => {
     if (selectedRequest && newStatus && user) {
-      updateRequestStatus(selectedRequest, newStatus as any, user.uid, user.fullName, notes);
+      await updateRequestStatus(selectedRequest, newStatus as any, user.uid, user.fullName, notes);
       setDialogOpen(false);
       setSelectedRequest(null);
       setNewStatus('');
       setNotes('');
+    }
+  };
+
+  const handleFileUpload = async (requestId: string, e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && user) {
+      setIsUploading(true);
+      try {
+        await uploadProcessedDocument(requestId, file, user.uid, user.fullName);
+        alert('Document uploaded successfully!');
+      } catch (error) {
+        console.error('Upload failed:', error);
+        alert('Failed to upload document.');
+      } finally {
+        setIsUploading(false);
+      }
     }
   };
 
@@ -200,22 +213,47 @@ export function AdminDashboard() {
                   </div>
                   <p className="text-sm text-gray-600">{request.documentTypeName}</p>
                   <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
-                    <span>{request.id}</span>
+                    <span>{request.id.split('-')[0]}...</span>
                     <span>{request.studentId}</span>
                     <span>{new Date(request.dateSubmitted).toLocaleDateString()}</span>
                     <span className="font-medium text-gray-700">₱{request.fee}</span>
                   </div>
                 </div>
-                <button
-                  onClick={() => {
-                    setSelectedRequest(request.id);
-                    setNewStatus(request.status);
-                    setDialogOpen(true);
-                  }}
-                  className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white text-sm rounded-xl transition-colors"
-                >
-                  Update
-                </button>
+                <div className="flex gap-2">
+                  <div className="relative">
+                    <input
+                      type="file"
+                      id={`file-${request.id}`}
+                      className="hidden"
+                      onChange={(e) => handleFileUpload(request.id, e)}
+                      accept=".pdf,.doc,.docx,image/*"
+                      disabled={isUploading}
+                    />
+                    <label
+                      htmlFor={`file-${request.id}`}
+                      className={`flex items-center gap-2 px-4 py-2 ${
+                        request.downloadUrl ? 'bg-blue-50 text-blue-600' : 'bg-green-500 text-white'
+                      } hover:opacity-90 text-sm rounded-xl transition-all cursor-pointer font-bold`}
+                    >
+                      {isUploading && selectedRequest === request.id ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Upload className="w-4 h-4" />
+                      )}
+                      {request.downloadUrl ? 'Update File' : 'Upload'}
+                    </label>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setSelectedRequest(request.id);
+                      setNewStatus(request.status);
+                      setDialogOpen(true);
+                    }}
+                    className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-sm rounded-xl transition-colors"
+                  >
+                    Status
+                  </button>
+                </div>
               </div>
             </div>
           ))}

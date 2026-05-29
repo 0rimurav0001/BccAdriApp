@@ -1,4 +1,19 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import {
+  collection,
+  onSnapshot,
+  doc,
+  addDoc,
+  updateDoc,
+  query,
+  orderBy,
+  serverTimestamp,
+  deleteDoc,
+  where
+} from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { db, storage } from '../firebase';
+import { useAuth } from './AuthContext';
 
 export interface DocumentType {
   id: string;
@@ -6,6 +21,7 @@ export interface DocumentType {
   fee: number;
   prerequisites: string[];
   processingDays: number;
+  isActive: boolean;
 }
 
 export interface DocumentRequest {
@@ -16,7 +32,7 @@ export interface DocumentRequest {
   documentTypeId: string;
   documentTypeName: string;
   status: 'Pending' | 'Processing' | 'Approved' | 'Ready for Download' | 'Rejected';
-  dateSubmitted: string;
+  dateSubmitted: any;
   downloadUrl?: string;
   fee: number;
   notes?: string;
@@ -28,145 +44,138 @@ export interface AuditLog {
   action: string;
   actorUid: string;
   actorName: string;
-  timestamp: string;
+  timestamp: any;
 }
 
 interface DataContextType {
   documentTypes: DocumentType[];
   requests: DocumentRequest[];
   auditLogs: AuditLog[];
-  addDocumentType: (docType: Omit<DocumentType, 'id'>) => void;
-  updateDocumentType: (id: string, docType: Partial<DocumentType>) => void;
-  deleteDocumentType: (id: string) => void;
-  submitRequest: (request: Omit<DocumentRequest, 'id' | 'dateSubmitted' | 'status'>) => void;
-  updateRequestStatus: (requestId: string, status: DocumentRequest['status'], actorUid: string, actorName: string, notes?: string) => void;
+  addDocumentType: (docType: Omit<DocumentType, 'id'>) => Promise<void>;
+  updateDocumentType: (id: string, docType: Partial<DocumentType>) => Promise<void>;
+  deleteDocumentType: (id: string) => Promise<void>;
+  submitRequest: (request: Omit<DocumentRequest, 'id' | 'dateSubmitted' | 'status'>) => Promise<void>;
+  updateRequestStatus: (requestId: string, status: DocumentRequest['status'], actorUid: string, actorName: string, notes?: string) => Promise<void>;
+  uploadProcessedDocument: (requestId: string, file: File, actorUid: string, actorName: string) => Promise<void>;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
-const INITIAL_DOCUMENT_TYPES: DocumentType[] = [
-  {
-    id: 'dt-001',
-    docName: 'Official Transcript',
-    fee: 150,
-    prerequisites: ['Clearance', 'Valid ID'],
-    processingDays: 5
-  },
-  {
-    id: 'dt-002',
-    docName: 'Certificate of Enrollment',
-    fee: 50,
-    prerequisites: ['Valid ID'],
-    processingDays: 1
-  },
-  {
-    id: 'dt-003',
-    docName: 'Certificate of Grades',
-    fee: 100,
-    prerequisites: ['Clearance'],
-    processingDays: 3
-  },
-  {
-    id: 'dt-004',
-    docName: 'Diploma',
-    fee: 500,
-    prerequisites: ['Clearance', 'Valid ID', 'Graduation Photo'],
-    processingDays: 14
-  }
-];
-
-const INITIAL_REQUESTS: DocumentRequest[] = [
-  {
-    id: 'req-001',
-    requesterUid: 'student-001',
-    requesterName: 'John Doe',
-    studentId: '2024-001234',
-    documentTypeId: 'dt-001',
-    documentTypeName: 'Official Transcript',
-    status: 'Processing',
-    dateSubmitted: '2026-05-15T10:30:00Z',
-    fee: 150
-  },
-  {
-    id: 'req-002',
-    requesterUid: 'student-002',
-    requesterName: 'Alice Johnson',
-    studentId: '2024-005678',
-    documentTypeId: 'dt-002',
-    documentTypeName: 'Certificate of Enrollment',
-    status: 'Ready for Download',
-    dateSubmitted: '2026-05-14T14:20:00Z',
-    fee: 50,
-    downloadUrl: '#'
-  },
-  {
-    id: 'req-003',
-    requesterUid: 'student-003',
-    requesterName: 'Bob Smith',
-    studentId: '2024-009012',
-    documentTypeId: 'dt-003',
-    documentTypeName: 'Certificate of Grades',
-    status: 'Pending',
-    dateSubmitted: '2026-05-18T09:15:00Z',
-    fee: 100
-  }
-];
-
 export function DataProvider({ children }: { children: ReactNode }) {
-  const [documentTypes, setDocumentTypes] = useState<DocumentType[]>(INITIAL_DOCUMENT_TYPES);
-  const [requests, setRequests] = useState<DocumentRequest[]>(INITIAL_REQUESTS);
+  const [documentTypes, setDocumentTypes] = useState<DocumentType[]>([]);
+  const [requests, setRequests] = useState<DocumentRequest[]>([]);
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
+  const { user } = useAuth();
 
-  const addDocumentType = (docType: Omit<DocumentType, 'id'>) => {
-    const newDocType: DocumentType = {
+  useEffect(() => {
+    // Listen for Document Types
+    const dtQuery = query(collection(db, 'documentTypes'));
+    const unsubscribeDT = onSnapshot(dtQuery, (snapshot) => {
+      const dts: DocumentType[] = [];
+      snapshot.forEach((doc) => {
+        dts.push({ id: doc.id, ...doc.data() } as DocumentType);
+      });
+      setDocumentTypes(dts);
+    });
+
+    // Listen for Requests
+    // If user is student, only show their requests
+    let reqQuery;
+    if (user?.role === 'student') {
+      reqQuery = query(
+        collection(db, 'requests'),
+        where('requesterUid', '==', user.uid),
+        orderBy('dateSubmitted', 'desc')
+      );
+    } else {
+      reqQuery = query(collection(db, 'requests'), orderBy('dateSubmitted', 'desc'));
+    }
+
+    const unsubscribeReq = onSnapshot(reqQuery, (snapshot) => {
+      const reqs: DocumentRequest[] = [];
+      snapshot.forEach((doc) => {
+        const data = doc.data();
+        reqs.push({
+          id: doc.id,
+          ...data,
+          dateSubmitted: data.dateSubmitted?.toDate?.()?.toISOString() || new Date().toISOString()
+        } as DocumentRequest);
+      });
+      setRequests(reqs);
+    });
+
+    return () => {
+      unsubscribeDT();
+      unsubscribeReq();
+    };
+  }, [user]);
+
+  const addDocumentType = async (docType: Omit<DocumentType, 'id'>) => {
+    await addDoc(collection(db, 'documentTypes'), {
       ...docType,
-      id: `dt-${Date.now()}`
-    };
-    setDocumentTypes([...documentTypes, newDocType]);
+      isActive: true
+    });
   };
 
-  const updateDocumentType = (id: string, docType: Partial<DocumentType>) => {
-    setDocumentTypes(documentTypes.map(dt =>
-      dt.id === id ? { ...dt, ...docType } : dt
-    ));
+  const updateDocumentType = async (id: string, docType: Partial<DocumentType>) => {
+    await updateDoc(doc(db, 'documentTypes', id), docType);
   };
 
-  const deleteDocumentType = (id: string) => {
-    setDocumentTypes(documentTypes.filter(dt => dt.id !== id));
+  const deleteDocumentType = async (id: string) => {
+    await deleteDoc(doc(db, 'documentTypes', id));
   };
 
-  const submitRequest = (request: Omit<DocumentRequest, 'id' | 'dateSubmitted' | 'status'>) => {
-    const newRequest: DocumentRequest = {
+  const submitRequest = async (request: Omit<DocumentRequest, 'id' | 'dateSubmitted' | 'status'>) => {
+    await addDoc(collection(db, 'requests'), {
       ...request,
-      id: `req-${Date.now()}`,
-      dateSubmitted: new Date().toISOString(),
-      status: 'Pending'
-    };
-    setRequests([newRequest, ...requests]);
+      status: 'Pending',
+      dateSubmitted: serverTimestamp()
+    });
   };
 
-  const updateRequestStatus = (
+  const updateRequestStatus = async (
     requestId: string,
     status: DocumentRequest['status'],
     actorUid: string,
     actorName: string,
     notes?: string
   ) => {
-    setRequests(requests.map(req =>
-      req.id === requestId
-        ? { ...req, status, notes, downloadUrl: status === 'Ready for Download' ? '#mock-download-url' : req.downloadUrl }
-        : req
-    ));
+    const updates: any = { status };
+    if (notes) updates.notes = notes;
 
-    const newLog: AuditLog = {
-      id: `log-${Date.now()}`,
+    await updateDoc(doc(db, 'requests', requestId), updates);
+
+    await addDoc(collection(db, 'auditLogs'), {
       requestId,
       action: `Status changed to ${status}`,
       actorUid,
       actorName,
-      timestamp: new Date().toISOString()
-    };
-    setAuditLogs([...auditLogs, newLog]);
+      timestamp: serverTimestamp()
+    });
+  };
+
+  const uploadProcessedDocument = async (requestId: string, file: File, actorUid: string, actorName: string) => {
+    // 1. Upload to Firebase Storage
+    const fileRef = ref(storage, `processed_documents/${requestId}/${file.name}`);
+    await uploadBytes(fileRef, file);
+
+    // 2. Get Download URL
+    const downloadUrl = await getDownloadURL(fileRef);
+
+    // 3. Update Firestore Request
+    await updateDoc(doc(db, 'requests', requestId), {
+      status: 'Ready for Download',
+      downloadUrl: downloadUrl
+    });
+
+    // 4. Log Action
+    await addDoc(collection(db, 'auditLogs'), {
+      requestId,
+      action: 'Document uploaded and ready for download',
+      actorUid,
+      actorName,
+      timestamp: serverTimestamp()
+    });
   };
 
   return (
@@ -178,7 +187,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
       updateDocumentType,
       deleteDocumentType,
       submitRequest,
-      updateRequestStatus
+      updateRequestStatus,
+      uploadProcessedDocument
     }}>
       {children}
     </DataContext.Provider>

@@ -1,4 +1,15 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import {
+  collection,
+  onSnapshot,
+  doc,
+  addDoc,
+  updateDoc,
+  query,
+  orderBy,
+  serverTimestamp
+} from 'firebase/firestore';
+import { db } from '../firebase';
 
 export interface PendingRegistration {
   id: string;
@@ -11,72 +22,79 @@ export interface PendingRegistration {
   dateOfBirth: string;
   address: string;
   status: 'pending' | 'approved' | 'rejected';
-  dateSubmitted: string;
+  dateSubmitted: any;
   reviewedBy?: string;
   reviewNotes?: string;
 }
 
 interface RegistrationContextType {
   pendingRegistrations: PendingRegistration[];
-  submitRegistration: (registration: Omit<PendingRegistration, 'id' | 'status' | 'dateSubmitted'>) => void;
-  approveRegistration: (id: string, reviewedBy: string) => void;
-  rejectRegistration: (id: string, reviewedBy: string, notes: string) => void;
+  submitRegistration: (registration: Omit<PendingRegistration, 'id' | 'status' | 'dateSubmitted'>) => Promise<void>;
+  approveRegistration: (id: string, reviewedBy: string) => Promise<void>;
+  rejectRegistration: (id: string, reviewedBy: string, notes: string) => Promise<void>;
 }
 
 const RegistrationContext = createContext<RegistrationContextType | undefined>(undefined);
 
-const INITIAL_REGISTRATIONS: PendingRegistration[] = [
-  {
-    id: 'reg-001',
-    email: 'maria.santos@school.edu',
-    fullName: 'Maria Santos',
-    studentId: '2024-012345',
-    course: 'Computer Science',
-    yearLevel: '1st Year',
-    phoneNumber: '09123456789',
-    dateOfBirth: '2005-03-15',
-    address: 'Binalatongan, Pangasinan',
-    status: 'pending',
-    dateSubmitted: '2026-05-17T10:30:00Z'
-  },
-  {
-    id: 'reg-002',
-    email: 'pedro.reyes@school.edu',
-    fullName: 'Pedro Reyes',
-    studentId: '2024-067890',
-    course: 'Information Technology',
-    yearLevel: '1st Year',
-    phoneNumber: '09187654321',
-    dateOfBirth: '2006-07-22',
-    address: 'San Carlos City, Pangasinan',
-    status: 'pending',
-    dateSubmitted: '2026-05-18T08:15:00Z'
-  }
-];
-
 export function RegistrationProvider({ children }: { children: ReactNode }) {
-  const [pendingRegistrations, setPendingRegistrations] = useState<PendingRegistration[]>(INITIAL_REGISTRATIONS);
+  const [pendingRegistrations, setPendingRegistrations] = useState<PendingRegistration[]>([]);
 
-  const submitRegistration = (registration: Omit<PendingRegistration, 'id' | 'status' | 'dateSubmitted'>) => {
-    const newRegistration: PendingRegistration = {
-      ...registration,
-      id: `reg-${Date.now()}`,
-      status: 'pending',
-      dateSubmitted: new Date().toISOString()
-    };
-    setPendingRegistrations([newRegistration, ...pendingRegistrations]);
+  useEffect(() => {
+    const q = query(collection(db, 'pendingRegistrations'), orderBy('dateSubmitted', 'desc'));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const registrations: PendingRegistration[] = [];
+      snapshot.forEach((doc) => {
+        const data = doc.data();
+        registrations.push({
+          id: doc.id,
+          ...data,
+          dateSubmitted: data.dateSubmitted?.toDate?.()?.toISOString() || new Date().toISOString()
+        } as PendingRegistration);
+      });
+      setPendingRegistrations(registrations);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  const submitRegistration = async (registration: Omit<PendingRegistration, 'id' | 'status' | 'dateSubmitted'>) => {
+    try {
+      await addDoc(collection(db, 'pendingRegistrations'), {
+        ...registration,
+        status: 'pending',
+        dateSubmitted: serverTimestamp()
+      });
+    } catch (error) {
+      console.error("Error submitting registration:", error);
+      throw error;
+    }
   };
 
-  const approveRegistration = (id: string, reviewedBy: string) => {
-    setPendingRegistrations(pendingRegistrations.map(reg =>
-      reg.id === id ? { ...reg, status: 'approved' as const, reviewedBy } : reg
-    ));
+  const approveRegistration = async (id: string, reviewedBy: string) => {
+    try {
+      const regRef = doc(db, 'pendingRegistrations', id);
+      await updateDoc(regRef, {
+        status: 'approved',
+        reviewedBy
+      });
+    } catch (error) {
+      console.error("Error approving registration:", error);
+      throw error;
+    }
   };
 
-  const rejectRegistration = (id: string, reviewedBy: string, notes: string) => {
-    setPendingRegistrations(pendingRegistrations.map(reg =>
-      reg.id === id ? { ...reg, status: 'rejected' as const, reviewedBy, reviewNotes: notes } : reg
-    ));
+  const rejectRegistration = async (id: string, reviewedBy: string, notes: string) => {
+    try {
+      const regRef = doc(db, 'pendingRegistrations', id);
+      await updateDoc(regRef, {
+        status: 'rejected',
+        reviewedBy,
+        reviewNotes: notes
+      });
+    } catch (error) {
+      console.error("Error rejecting registration:", error);
+      throw error;
+    }
   };
 
   return (

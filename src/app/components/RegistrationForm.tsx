@@ -10,6 +10,7 @@ interface RegistrationFormProps {
 export function RegistrationForm({ onClose }: RegistrationFormProps) {
   const { submitRegistration } = useRegistration();
   const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
     fullName: '',
@@ -21,15 +22,22 @@ export function RegistrationForm({ onClose }: RegistrationFormProps) {
     address: ''
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     // Validate all fields are filled
     const allFieldsFilled = Object.values(formData).every(value => value.trim() !== '');
 
     if (allFieldsFilled) {
-      submitRegistration(formData);
-      setSubmitted(true);
+      setIsSubmitting(true);
+      try {
+        await submitRegistration(formData);
+        setSubmitted(true);
+      } catch (error) {
+        alert('Failed to submit registration. Please try again.');
+      } finally {
+        setIsSubmitting(false);
+      }
     } else {
       alert('Please fill in all required fields');
     }
@@ -218,15 +226,24 @@ export function RegistrationForm({ onClose }: RegistrationFormProps) {
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl transition-colors"
+              disabled={isSubmitting}
+              className="flex-1 px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl transition-colors disabled:opacity-50"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="flex-1 px-4 py-3 bg-green-500 hover:bg-green-600 text-white rounded-xl transition-colors"
+              disabled={isSubmitting}
+              className="flex-1 px-4 py-3 bg-green-500 hover:bg-green-600 text-white rounded-xl transition-colors disabled:bg-gray-300 flex items-center justify-center gap-2"
             >
-              Submit Registration
+              {isSubmitting ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Submitting...
+                </>
+              ) : (
+                'Submit Registration'
+              )}
             </button>
           </div>
         </form>
