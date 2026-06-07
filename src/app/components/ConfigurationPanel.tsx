@@ -138,18 +138,18 @@ export function ConfigurationPanel() {
 
       <div className="bg-white rounded-2xl p-5 shadow-sm">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">System Configuration</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-3 md:gap-4">
           <div className="p-4 bg-gray-50 rounded-xl">
-            <p className="text-sm text-gray-600">Total Document Types</p>
-            <p className="text-3xl font-semibold text-green-600 mt-2">{documentTypes.length}</p>
+            <p className="text-[10px] md:text-sm text-gray-500 uppercase font-bold tracking-tight">Doc Types</p>
+            <p className="text-2xl md:text-3xl font-black text-green-600 mt-1">{documentTypes.length}</p>
           </div>
           <div className="p-4 bg-gray-50 rounded-xl">
-            <p className="text-sm text-gray-600">Average Processing Time</p>
-            <p className="text-3xl font-semibold text-green-600 mt-2">
+            <p className="text-[10px] md:text-sm text-gray-500 uppercase font-bold tracking-tight">Avg Days</p>
+            <p className="text-2xl md:text-3xl font-black text-green-600 mt-1">
               {Math.round(
                 documentTypes.reduce((sum, dt) => sum + dt.processingDays, 0) /
                 documentTypes.length
-              )} days
+              )}
             </p>
           </div>
         </div>

@@ -25,85 +25,89 @@ export function MainLayout({ children, currentView, onNavigate }: MainLayoutProp
   const isStudent = user?.role === 'student';
 
   const studentMenuItems = [
-    { id: 'portal', label: 'My Portal', icon: FileText }
+    { id: 'portal', label: 'Portal', icon: FileText }
   ];
 
   const adminMenuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'accounts', label: 'Account Management', icon: Users },
-    { id: 'config', label: 'Configuration', icon: Settings }
+    { id: 'accounts', label: 'Users', icon: Users },
+    { id: 'config', label: 'Config', icon: Settings }
   ];
 
   const menuItems = isStudent ? studentMenuItems : adminMenuItems;
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
-      <header className="bg-white/80 backdrop-blur-md border-b border-gray-100 sticky top-0 z-20">
-        <div className="flex items-center justify-between px-4 py-3 md:py-4 safe-top">
+    <div className="min-h-screen bg-gray-50 flex flex-col pb-20 md:pb-0">
+      {/* Native-feeling Header */}
+      <header className="bg-white/90 backdrop-blur-xl border-b border-gray-100 sticky top-0 z-20 safe-top">
+        <div className="flex items-center justify-between px-4 py-3 md:py-4 h-16 md:h-20">
           <div className="flex items-center gap-3">
             <button
               onClick={() => setSidebarOpen(true)}
-              className="p-3 -ml-2 hover:bg-gray-100 rounded-xl transition-colors min-h-[48px] min-w-[48px] flex items-center justify-center"
+              className="p-3 -ml-2 hover:bg-gray-100 rounded-2xl transition-colors active:scale-90 flex items-center justify-center min-h-[44px] min-w-[44px]"
               aria-label="Open menu"
             >
-              <MenuIcon className="w-6 h-6 text-gray-700" />
+              <MenuIcon className="w-6 h-6 text-gray-800" />
             </button>
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8">
-                <img src={logoImage} alt="BCC Logo" className="w-full h-full object-contain" />
+              <div className="w-8 h-8 rounded-lg overflow-hidden shadow-sm">
+                <img src={logoImage} alt="BCC Logo" className="w-full h-full object-cover" />
               </div>
-              <h1 className="text-lg font-bold text-gray-900 hidden xs:block">
+              <h1 className="text-lg font-black text-gray-900 tracking-tight hidden xs:block">
                 BCC Portal
               </h1>
             </div>
           </div>
+
           <div className="flex items-center gap-2">
             <div className="text-right hidden sm:block mr-2">
-              <p className="text-sm font-semibold text-gray-900">{user?.fullName}</p>
-              <p className="text-xs text-gray-500">
-                {user?.role === 'student' ? user.studentId : user?.role.toUpperCase()}
+              <p className="text-sm font-bold text-gray-900">{user?.fullName}</p>
+              <p className="text-[10px] font-black uppercase tracking-widest text-green-600 bg-green-50 px-2 py-0.5 rounded-full inline-block mt-0.5">
+                {user?.role === 'student' ? 'Student' : 'Administrator'}
               </p>
             </div>
             <button
               onClick={logout}
-              className="p-3 hover:bg-gray-100 rounded-xl transition-colors min-h-[48px] min-w-[48px] flex items-center justify-center"
+              className="p-3 hover:bg-red-50 hover:text-red-600 rounded-2xl transition-all active:scale-90 flex items-center justify-center min-h-[44px] min-w-[44px] text-gray-500"
               aria-label="Log out"
             >
-              <LogOut className="w-5 h-5 text-gray-600" />
+              <LogOut className="w-5 h-5" />
             </button>
           </div>
         </div>
       </header>
 
+      {/* Sidebar Drawer */}
       {sidebarOpen && (
         <>
           <div
-            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-30 transition-opacity duration-300"
+            className="fixed inset-0 bg-black/60 backdrop-blur-[2px] z-30 transition-opacity animate-in fade-in duration-300"
             onClick={() => setSidebarOpen(false)}
           />
-          <div className="fixed left-0 top-0 bottom-0 w-[280px] max-w-[85vw] bg-white z-40 shadow-2xl flex flex-col transform transition-transform duration-300 ease-out">
-            <div className="p-6 flex-1 overflow-y-auto">
-              <div className="flex items-center justify-between mb-8 pt-safe">
+          <div className="fixed left-0 top-0 bottom-0 w-[280px] max-w-[85vw] bg-white z-40 shadow-2xl flex flex-col transform transition-transform animate-in slide-in-from-left duration-300 ease-out">
+            <div className="p-6 flex-1 overflow-y-auto pt-safe">
+              <div className="flex items-center justify-between mb-8">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12">
-                    <img src={logoImage} alt="BCC Logo" className="w-full h-full object-contain" />
+                  <div className="w-12 h-12 rounded-xl overflow-hidden shadow-md">
+                    <img src={logoImage} alt="BCC Logo" className="w-full h-full object-cover" />
                   </div>
                   <div>
-                    <h2 className="text-base font-bold text-gray-900">BCC Portal</h2>
-                    <p className="text-xs text-gray-500">
-                      {user?.role === 'student' ? 'Student' : 'Admin'} Panel
+                    <h2 className="text-base font-black text-gray-900 leading-tight">BCC Portal</h2>
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                      {user?.role === 'student' ? 'Student' : 'Admin'} Edition
                     </p>
                   </div>
                 </div>
                 <button
                   onClick={() => setSidebarOpen(false)}
-                  className="p-2 -mr-2 hover:bg-gray-100 rounded-xl min-h-[44px] min-w-[44px] flex items-center justify-center"
+                  className="p-2 -mr-2 hover:bg-gray-100 rounded-xl min-h-[44px] min-w-[44px] flex items-center justify-center transition-colors active:scale-90"
                 >
                   <X className="w-6 h-6 text-gray-600" />
                 </button>
               </div>
 
-              <nav className="space-y-2">
+              <nav className="space-y-1.5">
+                <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4 ml-4">Main Menu</p>
                 {menuItems.map((item) => {
                   const Icon = item.icon;
                   const isActive = currentView === item.id;
@@ -114,33 +118,33 @@ export function MainLayout({ children, currentView, onNavigate }: MainLayoutProp
                         onNavigate(item.id);
                         setSidebarOpen(false);
                       }}
-                      className={`w-full flex items-center gap-4 px-4 py-4 rounded-2xl transition-all active:scale-[0.98] ${
+                      className={`w-full flex items-center gap-4 px-4 py-4 rounded-2xl transition-all active:scale-[0.96] ${
                         isActive
-                          ? 'bg-green-500 text-white shadow-md shadow-green-200'
-                          : 'text-gray-700 hover:bg-gray-50'
+                          ? 'bg-green-500 text-white shadow-lg shadow-green-200'
+                          : 'text-gray-600 hover:bg-gray-50'
                       }`}
                     >
-                      <Icon className={`w-5 h-5 ${isActive ? 'text-white' : 'text-gray-500'}`} />
-                      <span className="text-sm font-semibold">{item.label}</span>
+                      <Icon className={`w-5 h-5 ${isActive ? 'text-white' : 'text-gray-400'}`} />
+                      <span className="text-sm font-bold">{item.label}</span>
                     </button>
                   );
                 })}
               </nav>
             </div>
 
-            <div className="p-6 border-t border-gray-100 bg-gray-50/50 pb-safe">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-700 font-bold">
+            <div className="p-6 border-t border-gray-100 bg-gray-50 pb-safe">
+              <div className="flex items-center gap-3 mb-6 bg-white p-3 rounded-2xl shadow-sm border border-gray-100">
+                <div className="w-10 h-10 rounded-xl bg-green-500 flex items-center justify-center text-white font-black shadow-sm shadow-green-100">
                   {user?.fullName.charAt(0)}
                 </div>
                 <div className="min-w-0">
-                  <p className="text-sm font-bold text-gray-900 truncate">{user?.fullName}</p>
-                  <p className="text-xs text-gray-500 truncate">{user?.email}</p>
+                  <p className="text-xs font-black text-gray-900 truncate">{user?.fullName}</p>
+                  <p className="text-[10px] font-bold text-gray-400 truncate">{user?.email}</p>
                 </div>
               </div>
               <button
                 onClick={logout}
-                className="w-full py-3 px-4 flex items-center justify-center gap-2 text-red-600 font-semibold bg-red-50 hover:bg-red-100 rounded-xl transition-colors"
+                className="w-full py-3 px-4 flex items-center justify-center gap-2 text-red-600 font-bold bg-white border border-red-100 hover:bg-red-50 rounded-xl transition-all active:scale-95 shadow-sm"
               >
                 <LogOut className="w-4 h-4" />
                 Sign Out
@@ -150,11 +154,45 @@ export function MainLayout({ children, currentView, onNavigate }: MainLayoutProp
         </>
       )}
 
-      <main className="flex-1 overflow-x-hidden pb-safe">
+      {/* Main Content Area */}
+      <main className="flex-1 overflow-x-hidden pt-4">
         <div className="max-w-screen-xl mx-auto w-full">
           {children}
         </div>
       </main>
+
+      {/* Bottom Navigation (Mobile Only) */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-xl border-t border-gray-100 px-6 py-2 pb-safe z-30 flex items-center justify-around shadow-[0_-8px_30px_rgb(0,0,0,0.04)] rounded-t-[2.5rem]">
+        {menuItems.map((item) => {
+          const Icon = item.icon;
+          const isActive = currentView === item.id;
+          return (
+            <button
+              key={item.id}
+              onClick={() => onNavigate(item.id)}
+              className={`flex flex-col items-center gap-1 p-2 transition-all active:scale-75 ${
+                isActive ? 'text-green-600 scale-110' : 'text-gray-400'
+              }`}
+            >
+              <div className={`p-2 rounded-xl transition-all ${isActive ? 'bg-green-50' : ''}`}>
+                <Icon className={`w-6 h-6 ${isActive ? 'stroke-[2.5]' : 'stroke-[1.5]'}`} />
+              </div>
+              <span className={`text-[10px] font-black uppercase tracking-widest ${isActive ? 'opacity-100' : 'opacity-0'}`}>
+                {item.label}
+              </span>
+            </button>
+          );
+        })}
+        <button
+          onClick={() => setSidebarOpen(true)}
+          className="flex flex-col items-center gap-1 p-2 text-gray-400 active:scale-75 transition-all"
+        >
+          <div className="p-2 rounded-xl">
+            <MenuIcon className="w-6 h-6 stroke-[1.5]" />
+          </div>
+          <span className="text-[10px] font-black uppercase tracking-widest opacity-0">More</span>
+        </button>
+      </nav>
     </div>
   );
 }

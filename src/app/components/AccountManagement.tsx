@@ -147,51 +147,51 @@ export function AccountManagement() {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <div className="bg-white rounded-2xl p-5 shadow-sm">
-          <div className="flex items-center justify-between">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6">
+        <div className="bg-white rounded-2xl p-4 md:p-5 shadow-sm border border-gray-100">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
             <div>
-              <p className="text-sm text-gray-500">Total Users</p>
-              <p className="text-3xl font-semibold text-gray-900 mt-1">{users.length}</p>
+              <p className="text-[10px] md:text-sm font-bold text-gray-500 uppercase tracking-tight">Total Users</p>
+              <p className="text-2xl md:text-3xl font-black text-gray-900 mt-1">{users.length}</p>
             </div>
-            <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
-              <Users className="w-6 h-6 text-green-600" />
+            <div className="w-10 h-10 md:w-12 md:h-12 bg-green-50 rounded-xl flex items-center justify-center self-end md:self-auto">
+              <Users className="w-5 h-5 md:w-6 md:h-6 text-green-600" />
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl p-5 shadow-sm">
-          <div className="flex items-center justify-between">
+        <div className="bg-white rounded-2xl p-4 md:p-5 shadow-sm border border-gray-100">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
             <div>
-              <p className="text-sm text-gray-500">Pending</p>
-              <p className="text-3xl font-semibold text-gray-900 mt-1">{pendingCount}</p>
+              <p className="text-[10px] md:text-sm font-bold text-gray-500 uppercase tracking-tight">Pending</p>
+              <p className="text-2xl md:text-3xl font-black text-gray-900 mt-1">{pendingCount}</p>
             </div>
-            <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center">
-              <AlertCircle className="w-6 h-6 text-orange-600" />
+            <div className="w-10 h-10 md:w-12 md:h-12 bg-orange-50 rounded-xl flex items-center justify-center self-end md:self-auto">
+              <AlertCircle className="w-5 h-5 md:w-6 md:h-6 text-orange-600" />
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl p-5 shadow-sm">
-          <div className="flex items-center justify-between">
+        <div className="bg-white rounded-2xl p-4 md:p-5 shadow-sm border border-gray-100">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
             <div>
-              <p className="text-sm text-gray-500">Students</p>
-              <p className="text-3xl font-semibold text-gray-900 mt-1">{studentCount}</p>
+              <p className="text-[10px] md:text-sm font-bold text-gray-500 uppercase tracking-tight">Students</p>
+              <p className="text-2xl md:text-3xl font-black text-gray-900 mt-1">{studentCount}</p>
             </div>
-            <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-              <Users className="w-6 h-6 text-blue-600" />
+            <div className="w-10 h-10 md:w-12 md:h-12 bg-blue-50 rounded-xl flex items-center justify-center self-end md:self-auto">
+              <Users className="w-5 h-5 md:w-6 md:h-6 text-blue-600" />
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl p-5 shadow-sm">
-          <div className="flex items-center justify-between">
+        <div className="bg-white rounded-2xl p-4 md:p-5 shadow-sm border border-gray-100">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
             <div>
-              <p className="text-sm text-gray-500">Active</p>
-              <p className="text-3xl font-semibold text-gray-900 mt-1">{activeCount}</p>
+              <p className="text-[10px] md:text-sm font-bold text-gray-500 uppercase tracking-tight">Active</p>
+              <p className="text-2xl md:text-3xl font-black text-gray-900 mt-1">{activeCount}</p>
             </div>
-            <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
-              <UserCheck className="w-6 h-6 text-green-600" />
+            <div className="w-10 h-10 md:w-12 md:h-12 bg-green-50 rounded-xl flex items-center justify-center self-end md:self-auto">
+              <UserCheck className="w-5 h-5 md:w-6 md:h-6 text-green-600" />
             </div>
           </div>
         </div>

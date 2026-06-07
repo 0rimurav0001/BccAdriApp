@@ -53,43 +53,43 @@ export function StudentPortal() {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        <div className="bg-white rounded-[2rem] p-6 shadow-sm border border-gray-100/50">
-          <div className="flex items-center justify-between">
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
+        <div className="bg-white rounded-[1.5rem] md:rounded-[2rem] p-4 md:p-6 shadow-sm border border-gray-100/50">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
             <div>
-              <p className="text-xs uppercase tracking-wider font-bold text-gray-400">Total Requests</p>
-              <p className="text-3xl font-black text-gray-900 mt-2">{myRequests.length}</p>
+              <p className="text-[10px] md:text-xs uppercase tracking-wider font-black text-gray-400">Total Requests</p>
+              <p className="text-2xl md:text-3xl font-black text-gray-900 mt-1 md:mt-2">{myRequests.length}</p>
             </div>
-            <div className="w-14 h-14 bg-green-50 rounded-2xl flex items-center justify-center">
-              <FileText className="w-7 h-7 text-green-600" />
+            <div className="w-10 h-10 md:w-14 md:h-14 bg-green-50 rounded-xl md:rounded-2xl flex items-center justify-center self-end md:self-auto">
+              <FileText className="w-5 h-5 md:w-7 md:h-7 text-green-600" />
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-[2rem] p-6 shadow-sm border border-gray-100/50">
-          <div className="flex items-center justify-between">
+        <div className="bg-white rounded-[1.5rem] md:rounded-[2rem] p-4 md:p-6 shadow-sm border border-gray-100/50">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
             <div>
-              <p className="text-xs uppercase tracking-wider font-bold text-gray-400">In Progress</p>
-              <p className="text-3xl font-black text-gray-900 mt-2">
+              <p className="text-[10px] md:text-xs uppercase tracking-wider font-black text-gray-400">In Progress</p>
+              <p className="text-2xl md:text-3xl font-black text-gray-900 mt-1 md:mt-2">
                 {myRequests.filter(r => ['Pending', 'Processing', 'Approved'].includes(r.status)).length}
               </p>
             </div>
-            <div className="w-14 h-14 bg-orange-50 rounded-2xl flex items-center justify-center">
-              <Clock className="w-7 h-7 text-orange-600" />
+            <div className="w-10 h-10 md:w-14 md:h-14 bg-orange-50 rounded-xl md:rounded-2xl flex items-center justify-center self-end md:self-auto">
+              <Clock className="w-5 h-5 md:w-7 md:h-7 text-orange-600" />
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-[2rem] p-6 shadow-sm border border-gray-100/50 sm:col-span-2 lg:col-span-1">
-          <div className="flex items-center justify-between">
+        <div className="bg-white rounded-[1.5rem] md:rounded-[2rem] p-4 md:p-6 shadow-sm border border-gray-100/50 col-span-2 lg:col-span-1">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
             <div>
-              <p className="text-xs uppercase tracking-wider font-bold text-gray-400">Ready for Pickup</p>
-              <p className="text-3xl font-black text-gray-900 mt-2">
+              <p className="text-[10px] md:text-xs uppercase tracking-wider font-black text-gray-400">Ready for Pickup</p>
+              <p className="text-2xl md:text-3xl font-black text-gray-900 mt-1 md:mt-2">
                 {myRequests.filter(r => r.status === 'Ready for Download').length}
               </p>
             </div>
-            <div className="w-14 h-14 bg-green-50 rounded-2xl flex items-center justify-center">
-              <CheckCircle className="w-7 h-7 text-green-600" />
+            <div className="w-10 h-10 md:w-14 md:h-14 bg-green-50 rounded-xl md:rounded-2xl flex items-center justify-center self-end md:self-auto">
+              <CheckCircle className="w-5 h-5 md:w-7 md:h-7 text-green-600" />
             </div>
           </div>
         </div>

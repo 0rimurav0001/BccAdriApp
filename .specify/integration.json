@@ -2,10 +2,10 @@
   "version": "0.8.11",
   "integration_state_schema": 1,
   "installed_integrations": [
-    "claude"
+    "gemini"
   ],
   "integration_settings": {
-    "claude": {
+    "gemini": {
       "script": "ps",
       "parsed_options": {
         "commands_dir": ".specify/commands"
@@ -13,6 +13,6 @@
       "invoke_separator": "-"
     }
   },
-  "integration": "claude",
-  "default_integration": "claude"
+  "integration": "gemini",
+  "default_integration": "gemini"
 }
