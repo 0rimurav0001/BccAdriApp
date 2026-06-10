@@ -6,6 +6,7 @@ import { RegistrationProvider } from './contexts/RegistrationContext';
 import { LoginPage } from './components/LoginPage';
 import { MainLayout } from './components/MainLayout';
 import { AdminDashboard } from './components/AdminDashboard';
+import { StaffDashboard } from './components/StaffDashboard';
 import { StudentPortal } from './components/StudentPortal';
 import { ConfigurationPanel } from './components/ConfigurationPanel';
 import { DocumentationSite } from './components/DocumentationSite';
@@ -41,7 +42,9 @@ function AppContent() {
   // Update view when user changes
   useEffect(() => {
     if (user) {
-      setCurrentView(user.role === 'student' ? 'portal' : 'dashboard');
+      if (user.role === 'student') setCurrentView('portal');
+      else if (user.role === 'staff') setCurrentView('staff-portal');
+      else setCurrentView('dashboard');
     } else {
       setCurrentView('login');
     }
@@ -86,6 +89,10 @@ function AppContent() {
     switch (currentView) {
       case 'dashboard':
         return <AdminDashboard />;
+      case 'staff-portal':
+        return <StaffDashboard />;
+      case 'profile':
+        return <StaffDashboard initialTab="profile" />;
       case 'portal':
         return <StudentPortal />;
       case 'accounts':
@@ -93,7 +100,9 @@ function AppContent() {
       case 'config':
         return <ConfigurationPanel />;
       default:
-        return user.role === 'student' ? <StudentPortal /> : <AdminDashboard />;
+        if (user.role === 'student') return <StudentPortal />;
+        if (user.role === 'staff') return <StaffDashboard />;
+        return <AdminDashboard />;
     }
   };
 

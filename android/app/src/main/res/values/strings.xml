@@ -2,6 +2,6 @@
 <resources>
     <string name="app_name">BCC Portal</string>
     <string name="title_activity_main">BCC Portal</string>
-    <string name="package_name">com.bcc.academicportal</string>
-    <string name="custom_url_scheme">com.bcc.academicportal</string>
+    <string name="package_name">com.bcc.adri</string>
+    <string name="custom_url_scheme">com.bcc.adri</string>
 </resources>

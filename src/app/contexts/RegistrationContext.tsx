@@ -21,6 +21,7 @@ export interface PendingRegistration {
   phoneNumber: string;
   dateOfBirth: string;
   address: string;
+  idPhotoUrl?: string;
   password?: string;
   status: 'pending' | 'approved' | 'rejected';
   dateSubmitted: any;
@@ -60,8 +61,13 @@ export function RegistrationProvider({ children }: { children: ReactNode }) {
 
   const submitRegistration = async (registration: Omit<PendingRegistration, 'id' | 'status' | 'dateSubmitted'>) => {
     try {
+      // Sanitize data: remove any 'undefined' fields because Firestore crashes on them
+      const sanitizedData = Object.fromEntries(
+        Object.entries(registration).filter(([_, v]) => v !== undefined)
+      );
+
       await addDoc(collection(db, 'pendingRegistrations'), {
-        ...registration,
+        ...sanitizedData,
         status: 'pending',
         dateSubmitted: serverTimestamp()
       });

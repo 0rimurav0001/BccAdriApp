@@ -2,7 +2,7 @@ import { defineConfig } from 'vite'
 import path from 'path'
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
-
+import legacy from '@vitejs/plugin-legacy'
 
 function figmaAssetResolver() {
   return {
@@ -23,11 +23,17 @@ export default defineConfig({
     // Tailwind is not being actively used – do not remove them
     react(),
     tailwindcss(),
+    legacy({
+      targets: ['android >= 8'],
+      additionalLegacyPolyfills: ['regenerator-runtime/runtime']
+    }),
   ],
   base: './', // Important for Capacitor
   build: {
     outDir: 'dist',
     assetsDir: 'assets',
+    target: 'es2015', // Support older Android WebViews (Android 8+)
+    minify: 'terser',
     rollupOptions: {
       output: {
         manualChunks: undefined

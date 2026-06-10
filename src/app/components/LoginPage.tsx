@@ -24,7 +24,7 @@ export function LoginPage() {
     }
   };
 
-  const buildTimestamp = "2024-05-19 12:40 PM"; // Unique timestamp to verify build
+  const buildTimestamp = "2026-06-08 01:34 AM"; // Updated build time
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4 pb-safe pt-safe">

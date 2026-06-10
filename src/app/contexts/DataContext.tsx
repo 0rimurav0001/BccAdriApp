@@ -57,6 +57,7 @@ interface DataContextType {
   submitRequest: (request: Omit<DocumentRequest, 'id' | 'dateSubmitted' | 'status'>) => Promise<void>;
   updateRequestStatus: (requestId: string, status: DocumentRequest['status'], actorUid: string, actorName: string, notes?: string) => Promise<void>;
   uploadProcessedDocument: (requestId: string, file: File, actorUid: string, actorName: string) => Promise<void>;
+  seedDocumentTypes: () => Promise<void>;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -126,8 +127,13 @@ export function DataProvider({ children }: { children: ReactNode }) {
   };
 
   const submitRequest = async (request: Omit<DocumentRequest, 'id' | 'dateSubmitted' | 'status'>) => {
+    // Sanitize data
+    const sanitizedData = Object.fromEntries(
+      Object.entries(request).filter(([_, v]) => v !== undefined)
+    );
+
     await addDoc(collection(db, 'requests'), {
-      ...request,
+      ...sanitizedData,
       status: 'Pending',
       dateSubmitted: serverTimestamp()
     });
@@ -178,6 +184,24 @@ export function DataProvider({ children }: { children: ReactNode }) {
     });
   };
 
+  const seedDocumentTypes = async () => {
+    const defaultTypes = [
+      { docName: 'Official Transcript of Records', fee: 150, processingDays: 5, prerequisites: ['Clearance', '1x1 Photo'], isActive: true },
+      { docName: 'Certificate of Enrollment', fee: 50, processingDays: 2, prerequisites: ['School ID'], isActive: true },
+      { docName: 'Diploma Replacement', fee: 500, processingDays: 15, prerequisites: ['Affidavit of Loss', 'Valid ID'], isActive: true },
+      { docName: 'Good Moral Certificate', fee: 75, processingDays: 3, prerequisites: ['Clearance'], isActive: true },
+      { docName: 'Honorable Dismissal', fee: 100, processingDays: 5, prerequisites: ['Clearance', 'Request Form'], isActive: true }
+    ];
+
+    for (const type of defaultTypes) {
+      // Check if it already exists to avoid duplicates
+      const exists = documentTypes.some(dt => dt.docName === type.docName);
+      if (!exists) {
+        await addDoc(collection(db, 'documentTypes'), type);
+      }
+    }
+  };
+
   return (
     <DataContext.Provider value={{
       documentTypes,
@@ -188,7 +212,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
       deleteDocumentType,
       submitRequest,
       updateRequestStatus,
-      uploadProcessedDocument
+      uploadProcessedDocument,
+      seedDocumentTypes
     }}>
       {children}
     </DataContext.Provider>

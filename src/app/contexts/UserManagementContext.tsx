@@ -46,9 +46,16 @@ export function UserManagementProvider({ children }: { children: ReactNode }) {
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const usersData: UserAccount[] = [];
       snapshot.forEach((doc) => {
-        usersData.push({ uid: doc.id, ...doc.data() } as UserAccount);
+        const data = doc.data();
+        usersData.push({
+          uid: doc.id,
+          ...data,
+          status: data.status || 'active' // Default to active if status is missing
+        } as UserAccount);
       });
       setUsers(usersData);
+    }, (error) => {
+      console.error("Error in users snapshot:", error);
     });
 
     return () => unsubscribe();
@@ -57,34 +64,54 @@ export function UserManagementProvider({ children }: { children: ReactNode }) {
   const addUser = async (userData: Omit<UserAccount, 'uid' | 'status'> & { password?: string }) => {
     const { password, ...firestoreData } = userData;
 
+    // Sanitize data: Remove undefined fields which crash Firestore
+    const cleanData = Object.fromEntries(
+      Object.entries(firestoreData).filter(([_, v]) => v !== undefined)
+    );
+
     try {
       if (password) {
-        // Use a secondary Firebase app to create the user without signing out the current admin
-        const secondaryApp = initializeApp(firebaseConfig, "Secondary");
+        // Use a unique name for the secondary app to prevent "app already exists" errors
+        const appName = `Secondary-${Date.now()}`;
+        const secondaryApp = initializeApp(firebaseConfig, appName);
         const secondaryAuth = getAuth(secondaryApp);
 
         try {
           const userCredential = await createUserWithEmailAndPassword(secondaryAuth, userData.email, password);
 
           // Save profile to Firestore using the main db instance
-          await setDoc(doc(db, 'users', userCredential.user.uid), {
-            ...firestoreData,
+          const profileData = {
+            ...cleanData,
+            email: userData.email, // Explicitly ensure email is included
             status: 'active',
             createdAt: serverTimestamp()
-          });
+          };
+
+          await setDoc(doc(db, 'users', userCredential.user.uid), profileData);
+          console.log("Firestore profile created for UID:", userCredential.user.uid);
 
           // Clean up secondary app
           await signOut(secondaryAuth);
-          await deleteApp(secondaryApp);
-
-          alert(`Success! User ${userData.fullName} created.`);
-        } catch (err) {
-          await deleteApp(secondaryApp);
+          try {
+            await deleteApp(secondaryApp);
+          } catch (e) {
+            console.warn("Error deleting secondary app:", e);
+          }
+        } catch (err: any) {
+          try {
+            await deleteApp(secondaryApp);
+          } catch (e) {
+            // ignore
+          }
+          // Handle specific Firebase Auth errors for better clarity
+          if (err.code === 'auth/email-already-in-use') {
+            throw new Error("This email is already registered in the system.");
+          }
           throw err;
         }
       } else {
         await addDoc(collection(db, 'users'), {
-          ...firestoreData,
+          ...cleanData,
           status: 'active',
           createdAt: serverTimestamp()
         });

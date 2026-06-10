@@ -8,6 +8,7 @@ import {
   BookOpen,
   LogOut,
   Users,
+  User as UserIcon,
   X
 } from 'lucide-react';
 import logoImage from '../../imports/566232972_1315196483738875_3654026512146916988_n.jpg';
@@ -23,9 +24,15 @@ export function MainLayout({ children, currentView, onNavigate }: MainLayoutProp
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const isStudent = user?.role === 'student';
+  const isStaff = user?.role === 'staff';
 
   const studentMenuItems = [
     { id: 'portal', label: 'Portal', icon: FileText }
+  ];
+
+  const staffMenuItems = [
+    { id: 'staff-portal', label: 'Staff Portal', icon: LayoutDashboard },
+    { id: 'profile', label: 'My Profile', icon: UserIcon }
   ];
 
   const adminMenuItems = [
@@ -34,7 +41,13 @@ export function MainLayout({ children, currentView, onNavigate }: MainLayoutProp
     { id: 'config', label: 'Config', icon: Settings }
   ];
 
-  const menuItems = isStudent ? studentMenuItems : adminMenuItems;
+  const getMenuItems = () => {
+    if (isStudent) return studentMenuItems;
+    if (isStaff) return staffMenuItems;
+    return adminMenuItems;
+  };
+
+  const menuItems = getMenuItems();
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col pb-20 md:pb-0">
@@ -63,7 +76,7 @@ export function MainLayout({ children, currentView, onNavigate }: MainLayoutProp
             <div className="text-right hidden sm:block mr-2">
               <p className="text-sm font-bold text-gray-900">{user?.fullName}</p>
               <p className="text-[10px] font-black uppercase tracking-widest text-green-600 bg-green-50 px-2 py-0.5 rounded-full inline-block mt-0.5">
-                {user?.role === 'student' ? 'Student' : 'Administrator'}
+                {user?.role === 'student' ? 'Student' : user?.role === 'staff' ? 'Staff' : 'Administrator'}
               </p>
             </div>
             <button
@@ -94,7 +107,7 @@ export function MainLayout({ children, currentView, onNavigate }: MainLayoutProp
                   <div>
                     <h2 className="text-base font-black text-gray-900 leading-tight">BCC Portal</h2>
                     <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-                      {user?.role === 'student' ? 'Student' : 'Admin'} Edition
+                      {user?.role.toUpperCase()} Edition
                     </p>
                   </div>
                 </div>

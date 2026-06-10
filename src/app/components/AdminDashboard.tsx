@@ -1,7 +1,8 @@
 import { useState, useMemo, useRef } from 'react';
 import { useData } from '../contexts/DataContext';
 import { useAuth } from '../contexts/AuthContext';
-import { FileText, Clock, CheckCircle, TrendingUp, X, Upload, Loader2 } from 'lucide-react';
+import { useUserManagement } from '../contexts/UserManagementContext';
+import { FileText, Clock, CheckCircle, TrendingUp, X, Upload, Loader2, Users } from 'lucide-react';
 
 const STATUS_STYLES: Record<string, string> = {
   'Pending': 'bg-orange-100 text-orange-700',
@@ -15,6 +16,7 @@ const CHART_COLORS = ['#22C55E', '#10B981', '#F59E0B', '#3B82F6', '#8B5CF6'];
 
 export function AdminDashboard() {
   const { requests, updateRequestStatus, uploadProcessedDocument } = useData();
+  const { users } = useUserManagement();
   const { user } = useAuth();
   const [selectedRequest, setSelectedRequest] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -107,11 +109,11 @@ export function AdminDashboard() {
         <div className="bg-white rounded-2xl p-4 md:p-5 shadow-sm border border-gray-100">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
             <div>
-              <p className="text-[10px] md:text-sm font-bold text-gray-500 uppercase tracking-tight">Total Requests</p>
-              <p className="text-2xl md:text-3xl font-black text-gray-900 mt-1">{requests.length}</p>
+              <p className="text-[10px] md:text-sm font-bold text-gray-500 uppercase tracking-tight">Active Users</p>
+              <p className="text-2xl md:text-3xl font-black text-gray-900 mt-1">{users.length}</p>
             </div>
-            <div className="w-10 h-10 md:w-12 md:h-12 bg-green-50 rounded-xl flex items-center justify-center self-end md:self-auto">
-              <FileText className="w-5 h-5 md:w-6 md:h-6 text-green-600" />
+            <div className="w-10 h-10 md:w-12 md:h-12 bg-blue-50 rounded-xl flex items-center justify-center self-end md:self-auto">
+              <Users className="w-5 h-5 md:w-6 md:h-6 text-blue-600" />
             </div>
           </div>
         </div>
@@ -119,7 +121,7 @@ export function AdminDashboard() {
         <div className="bg-white rounded-2xl p-4 md:p-5 shadow-sm border border-gray-100">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
             <div>
-              <p className="text-[10px] md:text-sm font-bold text-gray-500 uppercase tracking-tight">Pending</p>
+              <p className="text-[10px] md:text-sm font-bold text-gray-500 uppercase tracking-tight">Pending Requests</p>
               <p className="text-2xl md:text-3xl font-black text-gray-900 mt-1">{statusCounts['Pending'] || 0}</p>
             </div>
             <div className="w-10 h-10 md:w-12 md:h-12 bg-orange-50 rounded-xl flex items-center justify-center self-end md:self-auto">
